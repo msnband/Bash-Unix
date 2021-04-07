@@ -1,0 +1,222 @@
+#!/usr/bin/env bash
+
+function init
+{
+   curl -s -o game.txt localhost:1337?type=csv
+
+   echo "This is your Game ID
+         $(cat game.txt | tail -n1 | cut -d ',' -f2)"
+    (cat game.txt | tail -n1 | cut -d "," -f2)> game.id
+  
+
+ }
+
+
+function maps
+{
+         curl -s -o map.txt localhost:1337/map?type=csv
+ 	 echo " 1. $(cat map.txt | tail -n1 | cut -d ',' -f1)"
+ 	 echo " 2. $(cat map.txt | tail -n1 | cut -d ',' -f2)"
+ }
+
+
+
+function Select
+{
+   GAMEID=$(cat game.txt | tail -n1 | cut -d "," -f2)
+
+    if [[ $1 -eq 1 ]]
+      then
+          curl -s localhost:1337/$GAMEID/map/small-maze.json?type=csv &> /dev/null
+          echo "You choosed: small-maze.json"
+
+    elif [[ $1 -eq 2 ]]
+      then
+         curl -s localhost:1337/$GAMEID/map/maze-of-doom.json?type=csv &> /dev/null
+         
+         echo "You choosed: maze-of-doom.json" 
+fi
+}
+
+
+function enter
+{
+    GAMEID=$(cat game.txt | tail -n1 | cut -d "," -f2)
+    curl -s -o room.txt localhost:1337/$GAMEID/maze?type=csv 
+    echo "Your Room ID is :$(cat room.txt | tail -n1 | cut -d ',' -f1)"
+    echo "Description :$(cat room.txt | tail -n1 | cut -d ',' -f2)"
+    west=$(cat room.txt | tail -n1 | cut -d ',' -f3)
+    east=$(cat room.txt | tail -n1 | cut -d ',' -f4)
+    south=$(cat room.txt | tail -n1 | cut -d ',' -f5)
+    north=$(cat room.txt | tail -n1 | cut -d ',' -f6)
+
+if [ $west != "-" ]; then
+   echo "You are able to go: west $west"
+fi
+
+if [ $east != "-" ]; then
+   echo "You are able to go: east $east"
+fi
+
+if [ $south != "-" ]; then
+   echo "You are able to go: south $south"
+fi
+
+if [ $north != "-" ]; then
+   echo "You are able to go: north $north"
+
+fi    
+ }
+
+
+function info
+{
+    echo "Your Room ID is :$(cat room.txt | tail -n1 | cut -d ',' -f1)"
+    echo "Description :$(cat room.txt | tail -n1 | cut -d ',' -f2)"
+    west=$(cat room.txt | tail -n1 | cut -d ',' -f3)
+    east=$(cat room.txt | tail -n1 | cut -d ',' -f4)
+    south=$(cat room.txt | tail -n1 | cut -d ',' -f5)
+    north=$(cat room.txt | tail -n1 | cut -d ',' -f6)
+
+if [ $west != "-" ]; then
+   echo "You are able to go: west $west"
+fi
+
+if [ $east != "-" ]; then
+   echo "You are able to go: east $east"
+fi
+
+if [ $south != "-" ]; then
+   echo "You are able to go: south $south"
+fi
+
+if [ $north != "-" ]; then
+   echo "You are able to go: north $north"
+
+fi    
+
+}
+
+function go
+
+{
+
+    GAMEID=$(cat game.txt | tail -n1 | cut -d "," -f2)
+    ROOMID=$(cat room.txt | tail -n1 | cut -d ',' -f1)
+    curl -s -o room.txt localhost:1337/$GAMEID/maze/"$ROOMID"/$1?type=csv
+    info
+}
+
+
+function go_north
+{
+       GAMEID=$(cat game.txt | tail -n1 | cut -d "," -f2)
+       curl -s -o room.txt localhost:1337/$GAMEID/maze?type=csv 
+       echo curl -s -o room.tx localhost:1337/$GAMEID/maze/0
+}     
+
+function go_south
+{
+	GAMEID=$(cat game.txt | tail -n1 | cut -d "," -f2)
+	curl -s -o room.txt localhost:1337/$GAMEID/maze?type=csv 
+
+"You are in room:" echo curl -s -o room.tx localhost:1337/$GAMEID/maze/0
+"Description:" echo curl -s -o room.tx localhost:1337/$GAMEID/maze/0
+"You can go to:"echo curl -s -o room.tx localhost:1337/$GAMEID/maze/0
+
+}
+
+
+function go_east
+{
+	GAMEID=$(cat game.txt | tail -n1 | cut -d "," -f2)
+	curl -s -o room.txt localhost:1337/$GAMEID/maze?type=csv 
+	 echo "go east"
+  
+}
+
+
+function go_west
+{
+
+	GAMEID=$(cat game.txt | tail -n1 | cut -d "," -f2)
+	curl -s -o room.txt localhost:1337/$GAMEID/maze?type=csv 
+	 echo "go west"
+
+}
+
+
+ main_function()
+{
+
+  if [[ $1 = "init" ]];
+    then
+        init
+
+  elif [[ $1 = "select" ]];
+    then
+        Select $2
+
+  elif [[ $1 = "maps" ]];
+     then
+         maps
+ 
+  elif [[ $1 = "info" ]];
+    then
+       info
+
+  elif [[ $1 = "enter" ]];
+    then
+        enter
+
+  elif [[ $1 = "go" ]];
+    then 
+         go $2
+
+   elif [[ $1 = "loop" ]];
+    then 
+         loop
+
+ 
+fi
+}
+
+
+function loop
+{
+
+   echo "Waiting on server to start.."
+   echo "The mazer is listening on: 1337"
+   echo "* MAZERUNNER *"
+   echo "Initializes new game..."
+   	init
+   echo "Setting up the maps..."
+   	maps
+   echo "choose map and press enter:"
+   read a
+   Select $a
+   	enter
+   echo "Enter command:('help' for help, 'done' to quit)"
+   while [ true ]; do
+   read entry
+   if [ $entry = "" ];then
+     echo "Enter command:('help' for help, 'done' to quit)"
+
+   elif [ $entry = "help" ];then
+   echo "example: move west = west"
+   echo "Enter command:('help' for help, 'done' to quit)"
+   elif [ $entry = "done" ];then
+    break
+   else
+       go $entry
+   fi
+   done
+
+
+}
+
+main_function $1 $2
+
+
+
+
